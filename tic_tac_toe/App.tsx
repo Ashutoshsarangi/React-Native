@@ -1,117 +1,175 @@
-/**
- * Sample React Native App
- * https://github.com/facebook/react-native
- *
- * @format
- */
-
-import React from 'react';
-import type {PropsWithChildren} from 'react';
+import React, {useState, useEffect} from 'react';
 import {
-  SafeAreaView,
-  ScrollView,
   StatusBar,
   StyleSheet,
   Text,
-  useColorScheme,
   View,
+  FlatList,
+  Pressable,
 } from 'react-native';
+import TicTacCard from './src/components/TicTacCard';
+import Snackbar from 'react-native-snackbar';
+import {TIC_TAC_TOE_BUTTON} from './App.constants';
 
-import {
-  Colors,
-  DebugInstructions,
-  Header,
-  LearnMoreLinks,
-  ReloadInstructions,
-} from 'react-native/Libraries/NewAppScreen';
+function App(): React.JSX.Element {
+  const [isCross, setIsCross] = useState(false);
+  const [gameState, setGameState] = useState(new Array(9).fill('empty'));
+  const [winner, setWinner] = useState('');
 
-type SectionProps = PropsWithChildren<{
-  title: string;
-}>;
+  const resetGame = () => {
+    setIsCross(false);
+    setGameState(new Array(9).fill('empty'));
+    setWinner('');
+  };
 
-function Section({children, title}: SectionProps): React.JSX.Element {
-  const isDarkMode = useColorScheme() === 'dark';
+  useEffect(() => {
+    checkGameStatus();
+  }, [gameState]);
+
+  const checkGameStatus = () => {
+    if (
+      gameState[0] !== 'empty' &&
+      gameState[0] === gameState[1] &&
+      gameState[1] === gameState[2]
+    ) {
+      setWinner(`Winner is ${gameState[0]}`);
+    } else if (
+      gameState[0] !== 'empty' &&
+      gameState[0] === gameState[3] &&
+      gameState[3] === gameState[6]
+    ) {
+      setWinner(`Winner is ${gameState[0]}`);
+    } else if (
+      gameState[1] !== 'empty' &&
+      gameState[1] === gameState[4] &&
+      gameState[4] === gameState[7]
+    ) {
+      setWinner(`Winner is ${gameState[1]}`);
+    } else if (
+      gameState[2] !== 'empty' &&
+      gameState[2] === gameState[5] &&
+      gameState[5] === gameState[8]
+    ) {
+      setWinner(`Winner is ${gameState[2]}`);
+    } else if (
+      gameState[3] !== 'empty' &&
+      gameState[3] === gameState[4] &&
+      gameState[4] === gameState[5]
+    ) {
+      setWinner(`Winner is ${gameState[3]}`);
+    } else if (
+      gameState[6] !== 'empty' &&
+      gameState[6] === gameState[7] &&
+      gameState[7] === gameState[8]
+    ) {
+      setWinner(`Winner is ${gameState[6]}`);
+    } else if (
+      gameState[0] !== 'empty' &&
+      gameState[0] === gameState[4] &&
+      gameState[4] === gameState[8]
+    ) {
+      setWinner(`Winner is ${gameState[0]}`);
+    } else if (
+      gameState[2] !== 'empty' &&
+      gameState[2] === gameState[4] &&
+      gameState[4] === gameState[6]
+    ) {
+      setWinner(`Winner is ${gameState[2]}`);
+    }
+  };
+
+  const handleBtnClick = indexPosition => {
+    if (winner) {
+      Snackbar.show({
+        text: 'Owner Already Decided',
+        duration: Snackbar.LENGTH_INDEFINITE,
+        action: {
+          text: 'RESET',
+          textColor: 'green',
+          onPress: resetGame,
+        },
+      });
+    }
+    const updategameState = gameState.map((state, index) => {
+      if (index === indexPosition) {
+        return isCross ? 'X' : 'O';
+      } else {
+        return state;
+      }
+    });
+    setGameState(updategameState);
+    setIsCross(!isCross);
+  };
+
   return (
-    <View style={styles.sectionContainer}>
-      <Text
-        style={[
-          styles.sectionTitle,
-          {
-            color: isDarkMode ? Colors.white : Colors.black,
-          },
-        ]}>
-        {title}
-      </Text>
-      <Text
-        style={[
-          styles.sectionDescription,
-          {
-            color: isDarkMode ? Colors.light : Colors.dark,
-          },
-        ]}>
-        {children}
-      </Text>
+    <View style={styles.container}>
+      <View style={[styles.userTerm, isCross && styles.anotherUser]}>
+        <Text style={styles.userText}>
+          This is {isCross ? 'X' : 'O'} Term To Play
+        </Text>
+      </View>
+      <FlatList
+        numColumns={3}
+        data={gameState}
+        renderItem={({item, index}) => (
+          <TicTacCard
+            item={item}
+            index={index}
+            handleBtnClick={handleBtnClick}
+          />
+        )}
+        keyExtractor={(item, index) => index.toString()}
+      />
+      {winner && (
+        <View>
+          <Text style={styles.btnText}>{winner}</Text>
+        </View>
+      )}
+      <Pressable onPress={resetGame} style={styles.resetBtn}>
+        <Text style={styles.btnText}>Reset Game</Text>
+      </Pressable>
     </View>
   );
 }
 
-function App(): React.JSX.Element {
-  const isDarkMode = useColorScheme() === 'dark';
-
-  const backgroundStyle = {
-    backgroundColor: isDarkMode ? Colors.darker : Colors.lighter,
-  };
-
-  return (
-    <SafeAreaView style={backgroundStyle}>
-      <StatusBar
-        barStyle={isDarkMode ? 'light-content' : 'dark-content'}
-        backgroundColor={backgroundStyle.backgroundColor}
-      />
-      <ScrollView
-        contentInsetAdjustmentBehavior="automatic"
-        style={backgroundStyle}>
-        <Header />
-        <View
-          style={{
-            backgroundColor: isDarkMode ? Colors.black : Colors.white,
-          }}>
-          <Section title="Step One">
-            Edit <Text style={styles.highlight}>App.tsx</Text> to change this
-            screen and then come back to see your edits.
-          </Section>
-          <Section title="See Your Changes">
-            <ReloadInstructions />
-          </Section>
-          <Section title="Debug">
-            <DebugInstructions />
-          </Section>
-          <Section title="Learn More">
-            Read the docs to discover what to do next:
-          </Section>
-          <LearnMoreLinks />
-        </View>
-      </ScrollView>
-    </SafeAreaView>
-  );
-}
-
 const styles = StyleSheet.create({
-  sectionContainer: {
-    marginTop: 32,
-    paddingHorizontal: 24,
+  container: {
+    backgroundColor: '#515151',
+    padding: 10,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
-  sectionTitle: {
-    fontSize: 24,
-    fontWeight: '600',
+  flatListContainer: {
+    alignItems: 'center',
   },
-  sectionDescription: {
-    marginTop: 8,
-    fontSize: 18,
-    fontWeight: '400',
+  userTerm: {
+    alignItems: 'center',
+    margin: 8,
+    padding: 8,
+    borderWidth: 1,
+    borderRadius: 5,
+    backgroundColor: '#123456',
   },
-  highlight: {
-    fontWeight: '700',
+
+  userText: {
+    fontSize: 19,
+    fontWeight: 'bold',
+    color: '#ffffff',
+  },
+  anotherUser: {
+    backgroundColor: '#fcba03',
+  },
+  resetBtn: {
+    padding: 8,
+    margin: 5,
+    backgroundColor: '#4ccf78',
+    borderRadius: 5,
+    elevation: 5,
+  },
+  btnText: {
+    fontSize: 19,
+    fontWeight: 'bold',
+    color: '#ffffff',
   },
 });
 
